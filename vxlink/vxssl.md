@@ -10,7 +10,7 @@
 
 # 定义 URL 和对应的本地存储位置
 declare -A urls_and_paths=(
-    ["https://ssl.vx.link/aaaaaaaaaaaaa.key"]="/path/to/local/aaaaaaaaaaaaa.key"]="/path/to/local/storage/file1.txt"
+    ["https://ssl.vx.link/aaaaaaaaaaaaa.key"]="/path/to/local/aaaaaaaaaaaaa.key"
     ["https://ssl.vx.link/aaaaaaaaaaaaa.crt"]="/path/to/local/aaaaaaaaaaaaa.crt"
     # 添加更多的 URL 和对应的本地存储位置
 )
