@@ -62,7 +62,7 @@ chmod +x vxSSLupdate.sh
 然后，添加作为计划任务，每天执行一次：
 
 ```bash
-echo "0 0 * * * /path/to/vxSSLupdate.sh" | crontab
+(crontab -l 2>/dev/null; echo "0 0 * * * /path/to/vxSSLupdate.sh") | crontab -
 ```
 
 这样，它就可以每天自动检查证书是否更新了，如果更新了，就会自动下载新的证书，并执行您指定的指令（比如 `nginx -s reload`）。
