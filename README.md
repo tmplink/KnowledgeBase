@@ -5,3 +5,4 @@
 ## 产品
 * [流量加速服务 vxTrans](./vxlink/vxtrans.md)
 * [证书服务 vxSSL](./vxlink/vxssl.md)
+* [静态托管 vxServer](vxlink/vxserver.md)
