@@ -31,6 +31,11 @@ for url in "${!urls_and_paths[@]}"; do
     response_code=$(curl -sI "$url" | awk '/^HTTP/ {print $2}')
     if [ "$response_code" -eq 200 ]; then
         etag=$(curl -sI "$url" | grep -i etag | awk -F' ' '{print $2}' | tr -d '\r\n')
+        # 检查 etag 是否是标准的 md5 值，如果不是则跳过
+        if [[ ! "$etag" =~ ^[a-f0-9]{32}$ ]]; then
+            echo "Warning: ETag for $url is not a standard md5 value. Skipping ETag check."
+            continue
+        fi
         # 检查是否 etag 发生改变
         echo "ETag for $url is $etag | Local ETag is $(cat "$local_path.etag")"
         if [ "$etag" != "$(cat "$local_path.etag")" ]; then
