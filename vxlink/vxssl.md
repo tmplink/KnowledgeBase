@@ -8,6 +8,13 @@
 ```bash
 #!/bin/bash
 
+# 检查 curl 是否安装
+if ! command -v curl &> /dev/null
+then
+    echo "curl 未安装，请先安装 curl。"
+    exit 1
+fi
+
 # 定义 URL 和对应的本地存储位置
 declare -A urls_and_paths=(
     # 下面是一个例子，如果是在 nginx 中，您应该根据 nginx.conf 或者自定义的配置文件来填写参数
