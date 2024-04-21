@@ -80,6 +80,19 @@ chmod +x vxSSLupdate.sh
 
 这样，它就可以每天自动检查证书是否更新了，如果更新了，就会自动下载新的证书，并执行您指定的指令（比如 `nginx -s reload`）。
 
+## Synology DiskStation Manager (DSM) 群晖自动化更新证书
+
+先在 控制面板-安全性-证书-高级设置 中重置证书，然后在 控制面板-任务计划 中新增用户定义的脚本，用户为 root 链接替换为微林证书网址，执行时间根据情况设置：
+
+```bash
+cd /usr/syno/etc/certificate/_archive/
+cd $(jq -r 'keys[0]' INFO)
+wget https://ssl.vx.link/65.....AA.key -O privkey.pem
+wget https://ssl.vx.link/65.....AA.crt -O cert.pem
+cp cert.pem fullchain.pem
+synow3tool --gen-all && systemctl reload nginx
+```
+
 ## 关于安全性
 理论上来说，证书服务提供的 Key 和 Crt 文件的 URL 不会被猜出，因为它是随机生成的。  
 但是如果在某个环节导致了 URL 地址泄露，您可以随时删除证书，然后再添加回来，这个时候 URL 会重新生成，之前的 URL 就会失效。
