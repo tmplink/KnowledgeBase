@@ -1,7 +1,7 @@
-# 微林 - 静态托管
+# 微林 - 边缘计算
 
 ## 介绍
-静态托管服务用于帮助将您的 Github 仓库作为 Web 发布。
+边缘计算服务用于帮助将您的 Github 仓库作为 Web 发布。
 
 ## 申请 Github Fine-grained Token
 1. 登录 Github，进入 [Settings](https://github.com/settings/tokens?type=beta) 页面
