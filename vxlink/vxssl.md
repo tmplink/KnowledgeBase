@@ -7,13 +7,7 @@
 
 ```bash
 #!/bin/bash
-
-# 检查 curl 是否安装
-if ! command -v curl >/dev/null 2>&1
-then
-    echo "curl 未安装，请先安装 curl。"
-    exit 1
-fi
+# 注意：此脚本需要 curl 与 md5sum 命令，如果没有请提前安装
 
 # 定义 URL 和对应的本地存储位置
 declare -A urls_and_paths=(
@@ -24,13 +18,6 @@ declare -A urls_and_paths=(
     # 请注意， Key 和 Crt 文件应该都一起更新
 )
 
-
-# 定义特定的指令(如果要重启服务，可以使用 nginx -s reload)
-command_to_execute="nginx -s reload"
-
-# 定义变量来判断是否需要执行操作
-execute_operation=false
-
 # 遍历所有 URL，并下载文件
 for url in "${!urls_and_paths[@]}"; do
     local_path="${urls_and_paths[$url]}"
@@ -39,21 +26,21 @@ for url in "${!urls_and_paths[@]}"; do
     response_code=$(curl -sI "$url" | awk '/^HTTP/ {print $2}')
     if [ "$response_code" -eq 200 ]; then
         xtag=$(curl -sI "$url" | grep -i xtag | awk -F' ' '{print $2}' | tr -d '\r\n')
+
         # 检查 xtag 是否是标准的 md5 值，如果不是则跳过
         if [[ ! "$xtag" =~ ^[a-f0-9]{32}$ ]]; then
             echo "Warning: Xtag for $url is not a standard md5 value. Skipping Xtag check."
             continue
         fi
+
         # 检查是否 xtag 发生改变
-        echo "Xtag for $url is $xtag | Local Xtag is $(cat "$local_path.xtag")"
-        if [ "$xtag" != "$(cat "$local_path.xtag")" ]; then
+        echo "Xtag for $url is $xtag | Local MD5 is $(md5sum "$local_path" | awk '{print $1}')"
+        if [ "$xtag" != "$(md5sum "$local_path" | awk '{print $1}')" ]; then
             # 下载文件
             echo "File downloaded from $url to $local_path"
             curl -s -o "$local_path" "$url"
             execute_operation=true
         fi
-        # 更新 Xtag
-        echo "$xtag" > "$local_path.xtag"
     else
         echo "Warning: HTTP response code is not 200 for $url. Skipping Xtag check."
     fi
