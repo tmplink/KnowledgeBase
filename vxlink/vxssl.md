@@ -1,5 +1,5 @@
 # 微林 - 证书服务
-## 自动化更新证书
+## 自动化更新证书 v2.0
 
 微林的证书服务，在证书申请完成之后，您可以获得证书的私钥和证书文件，微林为其提供了 URL 供您下载，这个 URL 是不会改变的，即便证书更新。因此，您可以监听这个证书的 URL，当证书更新时，您可以自动下载新的证书。
 
@@ -12,45 +12,52 @@
 # 定义 URL 和对应的本地存储位置
 declare -A urls_and_paths=(
     # 下面是一个例子，如果是在 nginx 中，您应该根据 nginx.conf 或者自定义的配置文件来填写参数
-    ["https://ssl.vx.link/657c302abeaaa.key"]="/root/test.key"
-    ["https://ssl.vx.link/657c302abeaaa.crt"]="/root/test.crt"
+    ["http://lab.vx.link/ssl/657c302abeaaa.key"]="/root/test.key"
+    ["http://lab.vx.link/ssl/657c302abeaaa.crt"]="/root/test.crt"
     # 一行一份，添加更多的 URL 和对应的本地存储位置
     # 请注意， Key 和 Crt 文件应该都一起更新
 )
+# 定义特定的指令(如果要重启服务，可以使用 nginx -s reload)
+command_to_execute="nginx -s reload"
+
+# 定义变量来判断是否需要执行操作
+execute_operation=false
 
 # 遍历所有 URL，并下载文件
 for url in "${!urls_and_paths[@]}"; do
     local_path="${urls_and_paths[$url]}"
     
-    # 获取并存储 Xtag
-    response_code=$(curl -sI "$url" | awk '/^HTTP/ {print $2}')
-    if [ "$response_code" -eq 200 ]; then
-        xtag=$(curl -sI "$url" | grep -i xtag | awk -F' ' '{print $2}' | tr -d '\r\n')
+    # 下载远端文件到临时文件
+    temp_file=$(mktemp)
+    curl -s -o "$temp_file" "$url"
 
-        # 检查 xtag 是否是标准的 md5 值，如果不是则跳过
-        if [[ ! "$xtag" =~ ^[a-f0-9]{32}$ ]]; then
-            echo "Warning: Xtag for $url is not a standard md5 value. Skipping Xtag check."
-            continue
-        fi
+    # 检查是否下载成功
+    if [ $? -ne 0 ]; then
+        echo "Warning: Failed to download $url"
+        rm -f "$temp_file"
+        continue
+    fi
 
-        # 检查是否 xtag 发生改变
-        echo "Xtag for $url is $xtag | Local MD5 is $(md5sum "$local_path" | awk '{print $1}')"
-        if [ "$xtag" != "$(md5sum "$local_path" | awk '{print $1}')" ]; then
-            # 下载文件
-            echo "File downloaded from $url to $local_path"
-            curl -s -o "$local_path" "$url"
-            execute_operation=true
-        fi
+    # 计算远端文件和本地文件的 MD5 值
+    remote_md5=$(md5sum "$temp_file" | awk '{print $1}')
+    local_md5=$(md5sum "$local_path" 2>/dev/null | awk '{print $1}')
+
+    echo "Remote MD5 for $url is $remote_md5 | Local MD5 is $local_md5"
+
+    # 如果 MD5 值不同，则更新本地文件
+    if [ "$remote_md5" != "$local_md5" ]; then
+        echo "Updating file from $url to $local_path"
+        mv "$temp_file" "$local_path"
+        execute_operation=true
     else
-        echo "Warning: HTTP response code is not 200 for $url. Skipping Xtag check."
+        rm -f "$temp_file"
     fi
 done
 
-# 执行特定的指令，当有任意一个 URL 的 xtag 发生改变时才执行
+# 执行特定的指令，当有任意一个 URL 的文件发生改变时才执行
 if [ "$execute_operation" = true ]; then
     eval "$command_to_execute"
 fi
-
 ```
 
 将这段脚本保存为 `vxSSLupdate.sh`（或者其它的文件名称），并赋予执行权限：
@@ -74,8 +81,8 @@ chmod +x vxSSLupdate.sh
 ```bash
 cd /usr/syno/etc/certificate/_archive/
 cd $(jq -r 'keys[0]' INFO)
-wget https://ssl.vx.link/65.....AA.key -O privkey.pem
-wget https://ssl.vx.link/65.....AA.crt -O cert.pem
+wget http://lab.vx.link/ssl/65.....AA.key -O privkey.pem
+wget http://lab.vx.link/ssl/65.....AA.crt -O cert.pem
 cp cert.pem fullchain.pem
 synow3tool --gen-all && systemctl reload nginx
 ```
