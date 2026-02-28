@@ -12,8 +12,8 @@
 # 定义 URL 和对应的本地存储位置
 declare -A urls_and_paths=(
     # 下面是一个例子，如果是在 nginx 中，您应该根据 nginx.conf 或者自定义的配置文件来填写参数
-    ["http://lab.vx.link/ssl/657c302abeaaa.key"]="/root/test.key"
-    ["http://lab.vx.link/ssl/657c302abeaaa.crt"]="/root/test.crt"
+    ["https://getssl.vx.link/657c302abeaaa.key"]="/root/test.key"
+    ["https://getssl.vx.link/657c302abeaaa.crt"]="/root/test.crt"
     # 一行一份，添加更多的 URL 和对应的本地存储位置
     # 请注意， Key 和 Crt 文件应该都一起更新
 )
@@ -81,8 +81,8 @@ chmod +x vxSSLupdate.sh
 ```bash
 cd /usr/syno/etc/certificate/_archive/
 cd $(jq -r 'keys[0]' INFO)
-wget http://lab.vx.link/ssl/65.....AA.key -O privkey.pem
-wget http://lab.vx.link/ssl/65.....AA.crt -O cert.pem
+wget https://getssl.vx.link/65.....AA.key -O privkey.pem
+wget https://getssl.vx.link/65.....AA.crt -O cert.pem
 cp cert.pem fullchain.pem
 synow3tool --gen-all && systemctl reload nginx
 ```
